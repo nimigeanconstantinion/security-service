@@ -1,10 +1,11 @@
 package com.example.securityservice.web;
 
+import com.example.securityservice.dto.LoginUserDTO;
 import com.example.securityservice.jwt.JWTTokenProvider;
 import com.example.securityservice.model.User;
 import com.example.securityservice.repository.UserRepo;
-import com.example.securityservice.service.SecurityService;
-import lombok.AllArgsConstructor;
+import com.example.securityservice.security.UserRole;
+import com.example.securityservice.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,31 +20,31 @@ import java.util.Optional;
 @Slf4j
 public class SecurityController {
 
-    private SecurityService securityService;
-    private UserRepo userRepo;
+    private UserService securityService;
+    private UserService userService;
     private AuthenticationManager authenticationManager;
     private JWTTokenProvider jwtTokenProvider;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public SecurityController(SecurityService securityService,UserRepo userRepo,AuthenticationManager authenticationManager,JWTTokenProvider jwtTokenProvider,BCryptPasswordEncoder bCryptPasswordEncoder){
+    public SecurityController(UserService userService, UserRepo userRepo, AuthenticationManager authenticationManager, JWTTokenProvider jwtTokenProvider, BCryptPasswordEncoder bCryptPasswordEncoder){
         this.jwtTokenProvider=jwtTokenProvider;
-        this.securityService=securityService;
-        this.userRepo=userRepo;
+        this.securityService= userService;
+        this.userService=userService;
         this.authenticationManager=authenticationManager;
         this.bCryptPasswordEncoder=bCryptPasswordEncoder;
     }
 
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/login")
-    public String login(@RequestBody User user){
-        Optional<User> usr=userRepo.findUserByEmail(user.getEmail());
+    public String login(@RequestBody LoginUserDTO user){
+        User usr=userService.getUserFromEmail(user.getEmail());
 
-        if(!usr.isEmpty()){
+        if(usr!=null){
 
 
-            if(bCryptPasswordEncoder.matches(user.getPassword(),usr.get().getPassword())){
+            if(bCryptPasswordEncoder.matches(user.getPassword(),usr.getPassword())){
 
-                    return jwtTokenProvider.generateJWTToken(user);
+                    return jwtTokenProvider.generateJWTToken(usr);
             }else{
                 throw new RuntimeException("Password did not match!!");
             }
@@ -58,13 +59,18 @@ public class SecurityController {
 
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/register")
-    public String signup(@RequestBody User user){
-        Optional<User> usr=userRepo.findUserByEmail(user.getEmail());
+    public String signup(@RequestBody LoginUserDTO user){
 
-        if(usr.isEmpty()){
-            user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-            userRepo.save(user);
-            return jwtTokenProvider.generateJWTToken(user);
+        User usr=userService.getUserFromEmail(user.getEmail());
+
+        if(usr==null){
+            User newUser=new User();
+            newUser.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+            newUser.setEmail(user.getEmail());
+            newUser.setRole(UserRole.USER);
+            newUser.setName(user.getName());
+            userService.addUser(newUser);
+            return jwtTokenProvider.generateJWTToken(newUser);
 
 
         }else{
