@@ -43,7 +43,8 @@ public class JWTTokenProvider {
 
     public String generateJWTToken(UserDetails user) {
         String[] claims=getClaimsFromUser(user);
-        return JWT.create().withIssuer(MY_CODE).withAudience(ADMINISTRATION).withIssuedAt(new Date())
+        return JWT.create().withIssuer(MY_CODE).withAudience(ADMINISTRATION)
+                .withIssuedAt(new Date())
                 .withSubject(user.getUsername()).withArrayClaim(AUTHORITIES,claims)
                 .withExpiresAt(new Date(System.currentTimeMillis()+EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(secretKey.getBytes(StandardCharsets.UTF_8)));

@@ -1,0 +1,42 @@
+version: '3.8'
+
+networks:
+  mynetwork:
+    driver: bridge
+
+volumes:
+  db_data:
+services:
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: micro_db
+    networks:
+      - mynetwork
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  auth-service:
+    image: ion21/auth-service:v1
+    networks:
+      - mynetwork
+    ports:
+      - "8080:8083"
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3307/micro_db?createDatabaseIfNotExist=true"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL5Dialect
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_APPLICATION_NAME: auth
+#      SPRING_CLOUD_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://localhost:8761/eureka
+      APPLICATION_JWT_SECRETKEY: asdasdasdasdasd123344asdasdasdasdasasd12321332sadas
+      APPLICATION_JWT_TOKENPREFIX: Bearer
+      APPLICATION_JWT_TOKENEXPIRATIONAFTERDAYS: "7"
+    depends_on:
+      - mysql

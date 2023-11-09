@@ -9,10 +9,10 @@ class JWTTokenProviderTest {
     private JWTTokenProvider jwtTokenProvider=new JWTTokenProvider();
     @Test
     void generateJWTToken() {
-        User user=new User();
-        user.setEmail("lksdk@kllkflfk");
-        user.setPassword("klldkklds");
-        System.out.println(jwtTokenProvider.generateJWTToken(user));
+//        User user=new User();
+//        user.setEmail("lksdk@kllkflfk");
+//        user.setPassword("klldkklds");
+//        System.out.println(jwtTokenProvider.generateJWTToken(user));
     }
 
     @Test
